@@ -246,17 +246,6 @@ class BetterPlayerControlsConfiguration {
         progressBarBackgroundColor: Colors.white70);
   }
 
-  factory BetterPlayerControlsConfiguration.cupertino() {
-    return const BetterPlayerControlsConfiguration(
-      fullscreenEnableIcon: CupertinoIcons.arrow_up_left_arrow_down_right,
-      fullscreenDisableIcon: CupertinoIcons.arrow_down_right_arrow_up_left,
-      playIcon: CupertinoIcons.play_arrow_solid,
-      pauseIcon: CupertinoIcons.pause_solid,
-      skipBackIcon: CupertinoIcons.gobackward_15,
-      skipForwardIcon: CupertinoIcons.goforward_15,
-    );
-  }
-
   ///Setup BetterPlayerControlsConfiguration based on Theme options.
   factory BetterPlayerControlsConfiguration.theme(ThemeData theme) {
     return BetterPlayerControlsConfiguration(

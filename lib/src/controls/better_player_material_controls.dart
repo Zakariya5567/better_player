@@ -66,9 +66,14 @@ class _BetterPlayerMaterialControlsState
   Widget _buildMainWidget() {
     _wasLoading = isLoading(_latestValue);
     if (_latestValue?.hasError == true) {
-      return Container(
-        color: Colors.black,
-        child: _buildErrorWidget(),
+      return Stack(
+        children: [
+          Container(
+            color: Colors.black,
+            child: _buildErrorWidget(),
+          ),
+          Positioned(top: 20, left: 20, child: _buildCloseButton())
+        ],
       );
     }
     return GestureDetector(
@@ -402,44 +407,44 @@ class _BetterPlayerMaterialControlsState
   /// Middle Row
   Widget _buildMiddleRow() {
     return Container(
-        color: _controlsConfiguration.controlBarColor,
-        width: double.infinity,
-        height: double.infinity,
-        child: _betterPlayerController?.isLiveStream() == true
-            ? const SizedBox()
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Expanded(
-                      child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _controlsConfiguration.enableSkips
-                          ? _buildSkipMinuteButton()
-                          : const SizedBox(),
-                      _controlsConfiguration.enableSkips
-                          ? _buildSkipButton()
-                          : const SizedBox(),
-                    ],
-                  )),
-                  Expanded(child: _buildReplayButton(_controller!)),
-                  Expanded(
-                      child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _controlsConfiguration.enableSkips
-                          ? _buildForwardMinuteButton()
-                          : const SizedBox(),
-                      _controlsConfiguration.enableSkips
-                          ? _buildForwardButton()
-                          : const SizedBox(),
-                    ],
-                  ))
-                ],
-              ),
-      );
+      color: _controlsConfiguration.controlBarColor,
+      width: double.infinity,
+      height: double.infinity,
+      child: _betterPlayerController?.isLiveStream() == true
+          ? const SizedBox()
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                    child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _controlsConfiguration.enableSkips
+                        ? _buildSkipMinuteButton()
+                        : const SizedBox(),
+                    _controlsConfiguration.enableSkips
+                        ? _buildSkipButton()
+                        : const SizedBox(),
+                  ],
+                )),
+                Expanded(child: _buildReplayButton(_controller!)),
+                Expanded(
+                    child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    _controlsConfiguration.enableSkips
+                        ? _buildForwardMinuteButton()
+                        : const SizedBox(),
+                    _controlsConfiguration.enableSkips
+                        ? _buildForwardButton()
+                        : const SizedBox(),
+                  ],
+                ))
+              ],
+            ),
+    );
   }
 
   /// Hit Area Clickable Button

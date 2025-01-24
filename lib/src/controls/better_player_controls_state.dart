@@ -45,6 +45,20 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
     }
   }
 
+  void skipMinuteBack() {
+    if (latestValue != null) {
+      cancelAndRestartTimer();
+      final beginning = const Duration().inMilliseconds;
+      final skip = (latestValue!.position -
+              Duration(
+                  milliseconds: betterPlayerControlsConfiguration
+                      .backwardSkipTimeMinuteInMilliseconds))
+          .inMilliseconds;
+      betterPlayerController!
+          .seekTo(Duration(milliseconds: max(skip, beginning)));
+    }
+  }
+
   void skipForward() {
     if (latestValue != null) {
       cancelAndRestartTimer();
@@ -53,6 +67,19 @@ abstract class BetterPlayerControlsState<T extends StatefulWidget>
               Duration(
                   milliseconds: betterPlayerControlsConfiguration
                       .forwardSkipTimeInMilliseconds))
+          .inMilliseconds;
+      betterPlayerController!.seekTo(Duration(milliseconds: min(skip, end)));
+    }
+  }
+
+  void skipMinuteForward() {
+    if (latestValue != null) {
+      cancelAndRestartTimer();
+      final end = latestValue!.duration!.inMilliseconds;
+      final skip = (latestValue!.position +
+              Duration(
+                  milliseconds: betterPlayerControlsConfiguration
+                      .forwardSkipTimeMinuteInMilliseconds))
           .inMilliseconds;
       betterPlayerController!.seekTo(Duration(milliseconds: min(skip, end)));
     }

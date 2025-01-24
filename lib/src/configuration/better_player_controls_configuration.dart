@@ -36,8 +36,14 @@ class BetterPlayerControlsConfiguration {
   ///Cupertino only icon, icon of skip
   final IconData skipBackIcon;
 
+  ///Cupertino only icon, icon of skip
+  final IconData skipBackMinuteIcon;
+
   ///Cupertino only icon, icon of forward
   final IconData skipForwardIcon;
+
+  ///Cupertino only icon, icon of forward
+  final IconData skipForwardMinuteIcon;
 
   ///Flag used to enable/disable fullscreen
   final bool enableFullscreen;
@@ -146,6 +152,12 @@ class BetterPlayerControlsConfiguration {
   ///Time which will be used once user uses backward
   final int backwardSkipTimeInMilliseconds;
 
+  ///Time which will be used once user uses forward
+  final int forwardSkipTimeMinuteInMilliseconds;
+
+  ///Time which will be used once user uses backward
+  final int backwardSkipTimeMinuteInMilliseconds;
+
   ///Color of default loading indicator
   final Color loadingColor;
 
@@ -161,7 +173,6 @@ class BetterPlayerControlsConfiguration {
   ///Color of text in bottom modal sheet used for overflow menu items.
   final Color overflowModalTextColor;
 
-
   ///Callback triggered when the close icon is tapped
   final VoidCallback? onClose;
 
@@ -175,8 +186,10 @@ class BetterPlayerControlsConfiguration {
     this.unMuteIcon = Icons.volume_off_outlined,
     this.fullscreenEnableIcon = Icons.fullscreen_outlined,
     this.fullscreenDisableIcon = Icons.fullscreen_exit_outlined,
-    this.skipBackIcon = Icons.replay_10_outlined,
-    this.skipForwardIcon = Icons.forward_10_outlined,
+    this.skipBackIcon = Icons.replay_outlined,
+    this.skipBackMinuteIcon = Icons.replay_outlined,
+    this.skipForwardIcon = Icons.replay_outlined,
+    this.skipForwardMinuteIcon = Icons.replay_outlined,
     this.enableFullscreen = true,
     this.enableMute = true,
     this.enableProgressText = true,
@@ -212,6 +225,8 @@ class BetterPlayerControlsConfiguration {
     this.overflowMenuIconsColor = Colors.black,
     this.forwardSkipTimeInMilliseconds = 10000,
     this.backwardSkipTimeInMilliseconds = 10000,
+    this.forwardSkipTimeMinuteInMilliseconds = 60000,
+    this.backwardSkipTimeMinuteInMilliseconds = 60000,
     this.loadingColor = Colors.white,
     this.loadingWidget,
     this.backgroundColor = Colors.black,

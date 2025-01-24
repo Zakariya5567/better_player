@@ -143,6 +143,7 @@ class _BetterPlayerMaterialControlsState
     super.didChangeDependencies();
   }
 
+  ///  ERROR WIDGET
   Widget _buildErrorWidget() {
     final errorBuilder =
         _betterPlayerController!.betterPlayerConfiguration.errorBuilder;
@@ -203,7 +204,8 @@ class _BetterPlayerMaterialControlsState
                     if (_controlsConfiguration.enablePip)
                       _buildPipButtonWrapperWidget(
                           controlsNotVisible, _onPlayerHide)
-                    else const SizedBox(),
+                    else
+                      const SizedBox(),
                     _buildMoreButton(),
                   ],
                 ),
@@ -213,6 +215,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// pip Button
   Widget _buildPipButton() {
     return BetterPlayerMaterialClickableWidget(
       onTap: () {
@@ -229,6 +232,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// Pip Button Wrapper Widget
   Widget _buildPipButtonWrapperWidget(
       bool hideStuff, void Function() onPlayerHide) {
     return FutureBuilder<bool>(
@@ -258,7 +262,6 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
-
   /// Icon Menu
   Widget _buildMoreButton() {
     return BetterPlayerMaterialClickableWidget(
@@ -279,7 +282,7 @@ class _BetterPlayerMaterialControlsState
   /// Icon Close
   Widget _buildCloseButton() {
     return BetterPlayerMaterialClickableWidget(
-      onTap:  _controlsConfiguration.onClose ?? (){},
+      onTap: _controlsConfiguration.onClose ?? () {},
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Icon(
@@ -291,6 +294,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// Bottom Bar
   Widget _buildBottomBar() {
     if (!betterPlayerController!.controlsEnabled) {
       return const SizedBox();
@@ -342,6 +346,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// Live Widget
   Widget _buildLiveWidget() {
     return Text(
       _betterPlayerController!.translations.controlsLive,
@@ -378,6 +383,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// Hit Area Widget
   Widget _buildHitArea() {
     if (!betterPlayerController!.controlsEnabled) {
       return const SizedBox();
@@ -393,78 +399,129 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
-
   /// Middle Row
   Widget _buildMiddleRow() {
     return Container(
-      color: _controlsConfiguration.controlBarColor,
-      width: double.infinity,
-      height: double.infinity,
-      child: _betterPlayerController?.isLiveStream() == true
-          ? const SizedBox()
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                if (_controlsConfiguration.enableSkips)
-                  Expanded(child: _buildSkipButton())
-                else
-                  const SizedBox(),
-                Expanded(child: _buildReplayButton(_controller!)),
-                if (_controlsConfiguration.enableSkips)
-                  Expanded(child: _buildForwardButton())
-                else
-                  const SizedBox(),
-              ],
-            ),
-    );
+        color: _controlsConfiguration.controlBarColor,
+        width: double.infinity,
+        height: double.infinity,
+        child: _betterPlayerController?.isLiveStream() == true
+            ? const SizedBox()
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _controlsConfiguration.enableSkips
+                          ? _buildSkipMinuteButton()
+                          : const SizedBox(),
+                      _controlsConfiguration.enableSkips
+                          ? _buildSkipButton()
+                          : const SizedBox(),
+                    ],
+                  )),
+                  Expanded(child: _buildReplayButton(_controller!)),
+                  Expanded(
+                      child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      _controlsConfiguration.enableSkips
+                          ? _buildForwardMinuteButton()
+                          : const SizedBox(),
+                      _controlsConfiguration.enableSkips
+                          ? _buildForwardButton()
+                          : const SizedBox(),
+                    ],
+                  ))
+                ],
+              ),
+      );
   }
 
+  /// Hit Area Clickable Button
   Widget _buildHitAreaClickableButton(
-      {Widget? icon, required void Function() onClicked}) {
+      {required IconData icon,
+      bool? isForward,
+      required String speed,
+      required void Function() onClicked}) {
     return Container(
       constraints: const BoxConstraints(maxHeight: 80.0, maxWidth: 80.0),
       child: BetterPlayerMaterialClickableWidget(
-        onTap: onClicked,
-        child: Align(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(48),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(8),
-              child: Stack(
-                children: [icon!],
+          onTap: onClicked,
+          child: Align(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(48),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.flip(
+                      flipX: isForward == true ? true : false,
+                      child: Icon(icon,
+                          color: _controlsConfiguration.iconsColor, size: 60),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Text(
+                        speed,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ),
-      ),
+          )),
     );
   }
-
 
   /// Icon Back
   Widget _buildSkipButton() {
     return _buildHitAreaClickableButton(
-      icon: Icon(
-        _controlsConfiguration.skipBackIcon,
-        size: 50,
-        color: _controlsConfiguration.iconsColor,
-      ),
+      speed: "10",
+      icon: _controlsConfiguration.skipBackIcon,
       onClicked: skipBack,
     );
   }
 
-  /// Icon Forword
+  /// Icon Back
+  Widget _buildSkipMinuteButton() {
+    return _buildHitAreaClickableButton(
+      speed: "60",
+      icon: _controlsConfiguration.skipBackIcon,
+      onClicked: skipMinuteBack,
+    );
+  }
+
+  /// Icon Forward
   Widget _buildForwardButton() {
     return _buildHitAreaClickableButton(
-      icon: Icon(
-        _controlsConfiguration.skipForwardIcon,
-        size: 50,
-        color: _controlsConfiguration.iconsColor,
-      ),
+      speed: "10",
+      isForward: true,
+      icon: _controlsConfiguration.skipForwardIcon,
       onClicked: skipForward,
+    );
+  }
+
+  /// Icon Forward Minute
+  Widget _buildForwardMinuteButton() {
+    return _buildHitAreaClickableButton(
+      speed: "60",
+      isForward: true,
+      icon: _controlsConfiguration.skipForwardIcon,
+      onClicked: skipMinuteForward,
     );
   }
 
@@ -472,19 +529,12 @@ class _BetterPlayerMaterialControlsState
   Widget _buildReplayButton(VideoPlayerController controller) {
     final bool isFinished = isVideoFinished(_latestValue);
     return _buildHitAreaClickableButton(
+      speed: "",
       icon: isFinished
-          ? Icon(
-              Icons.replay,
-            size: 50,
-              color: _controlsConfiguration.iconsColor,
-            )
-          : Icon(
-              controller.value.isPlaying
-                  ? _controlsConfiguration.pauseIcon
-                  : _controlsConfiguration.playIcon,
-             size: 50,
-              color: _controlsConfiguration.iconsColor,
-            ),
+          ? Icons.replay
+          : controller.value.isPlaying
+              ? _controlsConfiguration.pauseIcon
+              : _controlsConfiguration.playIcon,
       onClicked: () {
         if (isFinished) {
           if (_latestValue != null && _latestValue!.isPlaying) {
@@ -504,7 +554,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
-
+  /// Next Video widget
   Widget _buildNextVideoWidget() {
     return StreamBuilder<int?>(
       stream: _betterPlayerController!.nextVideoTimeStream,
@@ -630,6 +680,7 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// CANCEL RESTART TIMER
   @override
   void cancelAndRestartTimer() {
     _hideTimer?.cancel();
@@ -639,6 +690,7 @@ class _BetterPlayerMaterialControlsState
     _displayTapped = true;
   }
 
+  /// INITIALIZE
   Future<void> _initialize() async {
     _controller!.addListener(_updateState);
 
@@ -664,6 +716,7 @@ class _BetterPlayerMaterialControlsState
     });
   }
 
+  /// EXPAND COLLAPSED
   void _onExpandCollapse() {
     changePlayerControlsNotVisible(true);
     _betterPlayerController!.toggleFullScreen();
@@ -675,6 +728,7 @@ class _BetterPlayerMaterialControlsState
     });
   }
 
+  /// PLAY PAUSE
   void _onPlayPause() {
     bool isFinished = false;
 
@@ -700,6 +754,7 @@ class _BetterPlayerMaterialControlsState
     }
   }
 
+  /// START HIDE TIMER
   void _startHideTimer() {
     if (_betterPlayerController!.controlsAlwaysVisible) {
       return;
@@ -709,6 +764,7 @@ class _BetterPlayerMaterialControlsState
     });
   }
 
+  /// UPDATE  STATE
   void _updateState() {
     if (mounted) {
       if (!controlsNotVisible ||
@@ -726,6 +782,7 @@ class _BetterPlayerMaterialControlsState
     }
   }
 
+  /// PROGRESS BAR
   Widget _buildProgressBar() {
     return Expanded(
       flex: 40,
@@ -755,11 +812,13 @@ class _BetterPlayerMaterialControlsState
     );
   }
 
+  /// ON PLAYER HIDE
   void _onPlayerHide() {
     _betterPlayerController!.toggleControlsVisibility(!controlsNotVisible);
     widget.onControlsVisibilityChanged(!controlsNotVisible);
   }
 
+  /// LOADING WIDGET
   Widget? _buildLoadingWidget() {
     if (_controlsConfiguration.loadingWidget != null) {
       return Container(

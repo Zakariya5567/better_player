@@ -460,7 +460,7 @@ class _BetterPlayerMaterialControlsState
           child: Align(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.transparent,
+                color: Colors.black.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(48),
               ),
               child: Padding(

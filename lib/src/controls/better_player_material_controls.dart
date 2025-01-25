@@ -420,6 +420,9 @@ class _BetterPlayerMaterialControlsState
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    SizedBox(
+                      height: 50,
+                    ),
                     _controlsConfiguration.enableSkips
                         ? _buildSkipMinuteButton()
                         : const SizedBox(),
@@ -434,6 +437,9 @@ class _BetterPlayerMaterialControlsState
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    SizedBox(
+                      height: 50,
+                    ),
                     _controlsConfiguration.enableSkips
                         ? _buildForwardMinuteButton()
                         : const SizedBox(),

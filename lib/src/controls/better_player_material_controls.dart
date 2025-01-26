@@ -72,7 +72,12 @@ class _BetterPlayerMaterialControlsState
             color: Colors.black,
             child: _buildErrorWidget(),
           ),
-          Positioned(top: 20, left: 20, child: _buildCloseButton())
+          Positioned(
+              top: 20,
+              left: 20,
+              child: betterPlayerControlsConfiguration.enableClose
+                  ? _buildCloseButton()
+                  : const SizedBox())
         ],
       );
     }
@@ -205,7 +210,9 @@ class _BetterPlayerMaterialControlsState
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildCloseButton(),
+                    betterPlayerControlsConfiguration.enableClose
+                        ? _buildCloseButton()
+                        : const SizedBox(),
                     if (_controlsConfiguration.enablePip)
                       _buildPipButtonWrapperWidget(
                           controlsNotVisible, _onPlayerHide)
@@ -431,7 +438,11 @@ class _BetterPlayerMaterialControlsState
                         : const SizedBox(),
                   ],
                 )),
-                Expanded(child: _buildReplayButton(_controller!)),
+                Expanded(
+                  child: _controlsConfiguration.enablePlayPauseCenterIcon
+                      ? _buildReplayButton(_controller!)
+                      : SizedBox(),
+                ),
                 Expanded(
                     child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

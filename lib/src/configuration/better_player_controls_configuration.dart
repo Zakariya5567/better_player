@@ -176,6 +176,10 @@ class BetterPlayerControlsConfiguration {
   ///Callback triggered when the close icon is tapped
   final VoidCallback? onClose;
 
+  final bool enableClose;
+  final bool enableErrorWidget;
+  final bool enablePlayPauseCenterIcon;
+
   const BetterPlayerControlsConfiguration({
     this.controlBarColor = Colors.black87,
     this.textColor = Colors.white,
@@ -197,7 +201,10 @@ class BetterPlayerControlsConfiguration {
     this.enableProgressBarDrag = true,
     this.enablePlayPause = true,
     this.enableSkips = true,
+    this.enableClose = true,
+    this.enableErrorWidget = true,
     this.enableAudioTracks = true,
+    this.enablePlayPauseCenterIcon = true,
     this.progressBarPlayedColor = Colors.white,
     this.progressBarHandleColor = Colors.white,
     this.progressBarBufferedColor = Colors.white70,

@@ -26,6 +26,8 @@ AVPictureInPictureController *_pipController;
     _isInitialized = false;
     _isPlaying = false;
     _disposed = false;
+    _isSeeking = false;
+    _playerRate = 1.0;
     _player = [[AVPlayer alloc] init];
     _player.actionAtItemEnd = AVPlayerActionAtItemEndNone;
     ///Fix for loading large videos
@@ -72,6 +74,7 @@ AVPictureInPictureController *_pipController;
     _isInitialized = false;
     _isPlaying = false;
     _disposed = false;
+    _isSeeking = false;
     _failedCount = 0;
     _key = nil;
     if (_player.currentItem == nil) {
@@ -235,7 +238,6 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     _key = key;
     _stalledCount = 0;
     _isStalledCheckStarted = false;
-    _playerRate = 1;
     [_player replaceCurrentItemWithPlayerItem:item];
 
     AVAsset* asset = [item asset];
@@ -280,9 +282,17 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 }
 
 -(void)startStalledCheck{
+    // Don't start stalled check if we're in the middle of a seek operation
+    if (!_isPlaying || _isSeeking) {
+        _isStalledCheckStarted = false;
+        return;
+    }
+    
     if (_player.currentItem.playbackLikelyToKeepUp ||
         [self availableDuration] - CMTimeGetSeconds(_player.currentItem.currentTime) > 10.0) {
-        [self play];
+        // Directly update playing state instead of calling play() to avoid recursion
+        [self updatePlayingState];
+        _isStalledCheckStarted = false;
     } else {
         _stalledCount++;
         if (_stalledCount > 60){
@@ -292,10 +302,10 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
                         message:@"Failed to load video: playback stalled"
                         details:nil]);
             }
+            _isStalledCheckStarted = false;
             return;
         }
         [self performSelector:@selector(startStalledCheck) withObject:nil afterDelay:1];
-
     }
 }
 
@@ -343,10 +353,13 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
             }
         }
 
+        // Only handle stalled detection if we're actually playing and not in the middle of a seek
         if (_player.rate == 0 && //if player rate dropped to 0
             CMTIME_COMPARE_INLINE(_player.currentItem.currentTime, >, kCMTimeZero) && //if video was started
             CMTIME_COMPARE_INLINE(_player.currentItem.currentTime, <, _player.currentItem.duration) && //but not yet finished
-            _isPlaying) { //instance variable to handle overall state (changed to YES when user triggers playback)
+            _isPlaying && //instance variable to handle overall state (changed to YES when user triggers playback)
+            !_isStalledCheckStarted && // Don't trigger stalled check if one is already running
+            !_isSeeking) { // Don't trigger stalled check if we're seeking
             [self handleStalled];
         }
     }
@@ -474,6 +487,17 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 
         _isInitialized = true;
         [self updatePlayingState];
+        
+        // If we should be playing but the player isn't playing, try to start it
+        if (_isPlaying && _player.rate == 0) {
+            if (@available(iOS 10.0, *)) {
+                [_player playImmediatelyAtRate:_playerRate];
+            } else {
+                [_player play];
+                _player.rate = _playerRate;
+            }
+        }
+        
         _eventSink(@{
             @"event" : @"initialized",
             @"duration" : @([self duration]),
@@ -488,6 +512,8 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
     _stalledCount = 0;
     _isStalledCheckStarted = false;
     _isPlaying = true;
+    
+    // Always update playing state - seeking flag should not prevent normal playback
     [self updatePlayingState];
 }
 
@@ -521,18 +547,57 @@ static inline CGFloat radiansToDegrees(CGFloat radians) {
 - (void)seekTo:(int)location {
     ///When player is playing, pause video, seek to new position and start again. This will prevent issues with seekbar jumps.
     bool wasPlaying = _isPlaying;
-    if (wasPlaying){
-        [_player pause];
-    }
-
-    [_player seekToTime:CMTimeMake(location, 1000)
-        toleranceBefore:kCMTimeZero
-         toleranceAfter:kCMTimeZero
-      completionHandler:^(BOOL finished){
-        if (wasPlaying){
-            _player.rate = _playerRate;
+    
+    // Set seeking flag to prevent stalled detection interference
+    _isSeeking = true;
+    
+    // Cancel any ongoing stalled checks
+    _stalledCount = 0;
+    _isStalledCheckStarted = false;
+    
+    // Add a safety timeout to clear seeking flag if it gets stuck
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        if (_isSeeking) {
+            NSLog(@"BetterPlayer: Seeking timeout - clearing stuck seeking flag");
+            _isSeeking = false;
         }
-    }];
+    });
+    
+    // Ensure we're on the main queue for UI updates
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (wasPlaying){
+            [_player pause];
+        }
+        
+        // Add a small delay to ensure the pause operation completes
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [_player seekToTime:CMTimeMake(location, 1000)
+                toleranceBefore:kCMTimeZero
+                 toleranceAfter:kCMTimeZero
+              completionHandler:^(BOOL finished){
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // Clear seeking flag
+                    _isSeeking = false;
+                    
+                    // Don't send seek event as it causes infinite loop with Flutter side
+                    // The Flutter side already knows about the seek operation
+                    
+                    if (finished && wasPlaying && _isPlaying) {
+                        // Only restore playback if the seek was successful and we should still be playing
+                        if (@available(iOS 10.0, *)) {
+                            [_player playImmediatelyAtRate:_playerRate];
+                        } else {
+                            [_player play];
+                            _player.rate = _playerRate;
+                        }
+                    } else if (!finished) {
+                        // Log seek failure for debugging
+                        NSLog(@"BetterPlayer: Seek operation failed for location: %d", location);
+                    }
+                });
+            }];
+        });
+    });
 }
 
 - (void)setIsLooping:(bool)isLooping {

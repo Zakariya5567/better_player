@@ -765,11 +765,14 @@ class BetterPlayerController {
 
     if (currentVideoPlayerValue.hasError) {
       _videoPlayerValueOnError ??= currentVideoPlayerValue;
+      final String exceptionMessage =
+          currentVideoPlayerValue.errorDescription ?? 'Unknown error';
       _postEvent(
         BetterPlayerEvent(
           BetterPlayerEventType.exception,
           parameters: <String, dynamic>{
-            "exception": currentVideoPlayerValue.errorDescription
+            'exception': exceptionMessage,
+            'message': exceptionMessage,
           },
         ),
       );

@@ -104,6 +104,8 @@ internal class BetterPlayer(
             this.customDefaultLoadControl.bufferForPlaybackMs,
             this.customDefaultLoadControl.bufferForPlaybackAfterRebufferMs
         )
+        // Prefer time-based buffer thresholds so min/max buffer ms are respected (smoother 10s/60s skip).
+        loadBuilder.setPrioritizeTimeOverSizeThresholds(true)
         loadControl = loadBuilder.build()
         exoPlayer = ExoPlayer.Builder(context)
             .setTrackSelector(trackSelector)

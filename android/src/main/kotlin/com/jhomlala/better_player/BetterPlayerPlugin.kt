@@ -108,11 +108,16 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                     call.hasArgument(BUFFER_FOR_PLAYBACK_MS) &&
                     call.hasArgument(BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS)
                 ) {
+                    // Apply minimum floors so 10s/60s skip stays smooth (avoids tiny buffers that cause rebuffering).
+                    val minBufferMs = applyBufferFloor(call.argument(MIN_BUFFER_MS), MIN_BUFFER_MS_FLOOR)
+                    val maxBufferMs = applyBufferFloor(call.argument(MAX_BUFFER_MS), MAX_BUFFER_MS_FLOOR)
+                    val bufferForPlaybackMs = applyBufferFloor(call.argument(BUFFER_FOR_PLAYBACK_MS), BUFFER_FOR_PLAYBACK_MS_FLOOR)
+                    val bufferForPlaybackAfterRebufferMs = applyBufferFloor(call.argument(BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS), BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS_FLOOR)
                     customDefaultLoadControl = CustomDefaultLoadControl(
-                        call.argument(MIN_BUFFER_MS),
-                        call.argument(MAX_BUFFER_MS),
-                        call.argument(BUFFER_FOR_PLAYBACK_MS),
-                        call.argument(BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS)
+                        minBufferMs,
+                        maxBufferMs,
+                        bufferForPlaybackMs,
+                        bufferForPlaybackAfterRebufferMs
                     )
                 }
                 val player = BetterPlayer(
@@ -262,9 +267,23 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             )
         } else {
             val useCache = getParameter(dataSource, USE_CACHE_PARAMETER, false)
-            val maxCacheSizeNumber: Number = getParameter(dataSource, MAX_CACHE_SIZE_PARAMETER, 0)
-            val maxCacheFileSizeNumber: Number =
+
+            var maxCacheSizeNumber: Number =
+                getParameter(dataSource, MAX_CACHE_SIZE_PARAMETER, 0)
+            var maxCacheFileSizeNumber: Number =
                 getParameter(dataSource, MAX_CACHE_FILE_SIZE_PARAMETER, 0)
+
+            // Android-only: if caching is enabled but sizes are not provided or invalid,
+            // fall back to sensible defaults so caching actually works.
+            if (useCache) {
+                val currentMaxCacheSize = maxCacheSizeNumber.toLong()
+                val currentMaxCacheFileSize = maxCacheFileSizeNumber.toLong()
+                if (currentMaxCacheSize <= 0L || currentMaxCacheFileSize <= 0L) {
+                    maxCacheSizeNumber = 300L * 1024L * 1024L      // 300 MB total cache
+                    maxCacheFileSizeNumber = 50L * 1024L * 1024L   // 50 MB per file
+                }
+            }
+
             val maxCacheSize = maxCacheSizeNumber.toLong()
             val maxCacheFileSize = maxCacheFileSizeNumber.toLong()
             val uri = getParameter(dataSource, URI_PARAMETER, "")
@@ -400,6 +419,15 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         return defaultValue
     }
 
+    /**
+     * Applies a minimum floor to a buffer duration (ms) so that small values from Dart
+     * don't cause frequent rebuffering on 10s/60s skip. Only bumps up; never reduces.
+     */
+    private fun applyBufferFloor(value: Int?, floorMs: Int): Int {
+        val v = value ?: 0
+        return if (v < floorMs) floorMs else v
+    }
+
 
     private fun isPictureInPictureSupported(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && activity != null && activity!!.packageManager
@@ -523,6 +551,11 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         const val MAX_BUFFER_MS = "maxBufferMs"
         const val BUFFER_FOR_PLAYBACK_MS = "bufferForPlaybackMs"
         const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS = "bufferForPlaybackAfterRebufferMs"
+        // Minimum buffer durations (ms) applied on Android so 10s/60s skip stays smooth.
+        private const val MIN_BUFFER_MS_FLOOR = 30_000           // 30s
+        private const val MAX_BUFFER_MS_FLOOR = 90_000           // 90s
+        private const val BUFFER_FOR_PLAYBACK_MS_FLOOR = 2_500   // 2.5s before start after seek
+        private const val BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS_FLOOR = 2_000 // 2s after rebuffer
         const val CACHE_KEY_PARAMETER = "cacheKey"
         private const val INIT_METHOD = "init"
         private const val CREATE_METHOD = "create"
